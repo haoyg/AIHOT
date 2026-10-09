@@ -1,5 +1,11 @@
 # 部署
 
+## Cloudflare Pages 界面预览
+
+仅查看原项目前端效果时，可用 Node.js 24 先运行 `npm run build -w @aihot/web`，再运行 `node scripts/build-preview.ts`。生成文件位于 `.data/pages-preview/`，可通过 Wrangler 上传到 Pages。
+
+此预览使用明确标注的示例内容，没有数据库和模型调用。页面保留原版布局，但不加载应用脚本；筛选、搜索、收藏、登录和后台写入不可用。条款与隐私模板不作为正式条款发布。预览禁止搜索引擎收录，不代表完整后端已经适配上线。生产发布会替换该 Pages 项目当前网站；需要恢复时使用 Pages 的部署回滚。
+
 ## 用 Docker（推荐）
 
 需要一台装了 Docker（带 Compose）的机器。云服务器建议至少 2 核、4 GB 内存，构建镜像时要用到。
@@ -222,6 +228,14 @@ docker compose logs -f --tail 100 api worker web
 - 所有付费服务都有每分钟、每小时、每天的调用上限（后台“设置 → 付费请求上限”），超过就暂停，不会一夜之间刷爆账单。填 0 表示立即停用这个服务。
 
 ## 不用 Docker
+
+### Supabase PostgreSQL
+
+Supabase 可以作为后端数据库。把项目控制台提供的连接串保存为后端的 `DATABASE_URL`，不要传给前端或提交到 Git。使用 transaction pooler 时设置 `DATABASE_CONNECTION_MODE=transaction`，以关闭其不支持的服务端预编译语句；直连和 session pooler 不需要这个设置。
+
+数据库迁移和备份使用直连；无法连接 IPv6 时选择 session pooler。不要通过 transaction pooler 执行依赖同一会话的迁移。应用表必须限制 Data API 的访问，公开内容仍只由 `publication/` 读取，不能给匿名角色直接开放后台业务表。
+
+这只是数据库连接配置，不代表应用已支持 Cloudflare Workers。当前 Node.js API 和后台进程仍依赖本地文件、原生图片处理及 pg-boss 常驻任务；部署到 Workers 前需要适配这些能力，并验证 API、任务和所有公开出口。
 
 需要 Node.js 24.11 以上和 PostgreSQL 16 或 17，系统用 Linux 或 macOS；Windows 上请在 WSL2 里运行，或者用上面的 Docker 方式。
 

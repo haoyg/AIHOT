@@ -11,6 +11,9 @@ const numberType = (oid: number) => ({
 
 export const sql = postgres(config.databaseUrl, {
   max: Number(process.env.DATABASE_POOL_MAX || 10),
+  // Supabase's transaction pooler does not preserve a connection between transactions.
+  // Its supported connection mode requires unnamed statements.
+  prepare: process.env.DATABASE_CONNECTION_MODE !== "transaction",
   // Keep connections through quiet minutes: a reconnect costs a SCRAM exchange on the next request.
   idle_timeout: 600,
   connect_timeout: 10,
